@@ -1,0 +1,690 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paciente-virtual-adaptativo/schemas/caso/1.0.0",
+  "title": "Caso clínico progresivo · Paciente Virtual Adaptativo",
+  "description": "Contrato de datos de un caso clínico. Separa lo que el estudiante ve al inicio (public), lo que se revela solo si lo pide (on_request) y lo que solo lee el motor de reglas y la evaluación (protected). Las reglas que cruzan campos se verifican con validar_caso.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "title",
+    "specialty",
+    "language",
+    "status",
+    "source",
+    "public",
+    "on_request",
+    "protected",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.\\d+\\.\\d+$",
+      "description": "Versión del esquema (SemVer). Esta versión acepta la serie 1.x.x."
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{3,5}-\\d{3}$",
+      "description": "Identificador del caso, por ejemplo CARD-001."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 80,
+      "description": "Título visible. No debe revelar el diagnóstico."
+    },
+    "specialty": {
+      "enum": [
+        "medicina_interna",
+        "pediatria",
+        "ginecologia_obstetricia",
+        "cirugia_general",
+        "emergencias"
+      ]
+    },
+    "language": {
+      "const": "es"
+    },
+    "status": {
+      "enum": [
+        "borrador",
+        "validado",
+        "curado",
+        "rechazado"
+      ],
+      "description": "Solo los casos «curado» pueden usarse con estudiantes."
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "public": {
+      "$ref": "#/$defs/public"
+    },
+    "on_request": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/dato_bajo_solicitud"
+      }
+    },
+    "protected": {
+      "$ref": "#/$defs/protected"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    }
+  },
+  "$defs": {
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{3,5}-\\d{3}\\.[a-z]+\\.[a-z0-9_]+$",
+      "description": "Identificador estable de un dato: CASO.tipo.nombre, por ejemplo CARD-001.lab.troponin_t."
+    },
+    "clave": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "codigo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "value"
+      ],
+      "properties": {
+        "system": {
+          "enum": [
+            "LOINC",
+            "SNOMED CT",
+            "CIE-10",
+            "RxNorm"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uri",
+        "alt"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 3
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Texto alternativo para lectores de pantalla."
+        }
+      }
+    },
+    "dato": {
+      "type": "object",
+      "required": [
+        "evidence_id",
+        "category",
+        "label"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/evidence_id"
+        },
+        "category": {
+          "enum": [
+            "motivo",
+            "sintoma",
+            "antecedente",
+            "medicacion",
+            "signo_vital",
+            "anamnesis",
+            "examen_fisico",
+            "laboratorio",
+            "imagen",
+            "estudio"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 2
+        },
+        "text": {
+          "type": "string",
+          "minLength": 2
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Código UCUM, por ejemplo /min, mm[Hg], Cel, %, ng/mL."
+        },
+        "code": {
+          "$ref": "#/$defs/codigo"
+        },
+        "reference_range": {
+          "type": "string"
+        },
+        "interpretation": {
+          "enum": [
+            "N",
+            "H",
+            "L",
+            "A"
+          ],
+          "description": "Normal, alto, bajo o anormal (estilo FHIR)."
+        },
+        "asset": {
+          "$ref": "#/$defs/asset"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "required": [
+            "value",
+            "unit"
+          ]
+        }
+      ],
+      "dependentRequired": {
+        "value": [
+          "unit"
+        ],
+        "unit": [
+          "value"
+        ]
+      }
+    },
+    "dato_publico": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/dato"
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "reveal_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "mode",
+        "requires"
+      ],
+      "properties": {
+        "owner": {
+          "enum": [
+            "paciente",
+            "medico_asistente",
+            "laboratorio",
+            "radiologia",
+            "especialista"
+          ],
+          "description": "Agente que puede revelar el dato."
+        },
+        "mode": {
+          "enum": [
+            "al_preguntar",
+            "al_examinar",
+            "al_solicitar_examen"
+          ],
+          "description": "Acción del estudiante que habilita la revelación."
+        },
+        "requires": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/clave"
+          },
+          "description": "Temas o exámenes que deben pedirse."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "owner": {
+                "const": "paciente"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mode": {
+                "const": "al_preguntar"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "owner": {
+                "enum": [
+                  "laboratorio",
+                  "radiologia"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mode": {
+                "const": "al_solicitar_examen"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dato_bajo_solicitud": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/dato"
+        }
+      ],
+      "required": [
+        "reveal_policy"
+      ],
+      "properties": {
+        "reveal_policy": {
+          "$ref": "#/$defs/reveal_policy"
+        }
+      },
+      "unevaluatedProperties": false
+    },
+    "public": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "patient",
+        "chief_complaint",
+        "items",
+        "allergies_recorded"
+      ],
+      "properties": {
+        "patient": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alias",
+            "age_years",
+            "sex"
+          ],
+          "properties": {
+            "alias": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Nombre ficticio."
+            },
+            "age_years": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            "sex": {
+              "enum": [
+                "masculino",
+                "femenino"
+              ]
+            }
+          }
+        },
+        "chief_complaint": {
+          "$ref": "#/$defs/dato_publico"
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/dato_publico"
+          }
+        },
+        "allergies_recorded": {
+          "type": "boolean",
+          "description": "Si es false, el campo de alergias de la ficha aparece vacío a propósito y el estudiante debe preguntar."
+        },
+        "allergies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "allergies_recorded": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "allergies"
+        ]
+      }
+    },
+    "protected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diagnosis",
+        "differentials",
+        "treatment_reference",
+        "contraindications",
+        "evaluation"
+      ],
+      "properties": {
+        "diagnosis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "synonyms"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 3
+            },
+            "synonyms": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "code": {
+              "$ref": "#/$defs/codigo"
+            }
+          }
+        },
+        "differentials": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "must_not_miss",
+              "discard_evidence_ids"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 3
+              },
+              "must_not_miss": {
+                "type": "boolean",
+                "description": "Diagnóstico grave que no se puede pasar por alto."
+              },
+              "discard_evidence_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/evidence_id"
+                },
+                "description": "Datos que permiten descartarlo o hacerlo menos probable."
+              }
+            }
+          }
+        },
+        "treatment_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "key_actions"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 10
+            },
+            "key_actions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 3
+              }
+            }
+          }
+        },
+        "contraindications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "drug_or_class",
+              "reason",
+              "evidence_id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^ci\\d+$"
+              },
+              "drug_or_class": {
+                "type": "string",
+                "minLength": 3
+              },
+              "code": {
+                "$ref": "#/$defs/codigo"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 5
+              },
+              "evidence_id": {
+                "$ref": "#/$defs/evidence_id"
+              },
+              "alternative": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "evaluation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key_questions",
+            "tests"
+          ],
+          "properties": {
+            "key_questions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "topic",
+                  "evidence_ids",
+                  "weight",
+                  "error_if_missing"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^kq\\d+$"
+                  },
+                  "topic": {
+                    "type": "string",
+                    "minLength": 3
+                  },
+                  "evidence_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/$defs/evidence_id"
+                    }
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "critical": {
+                    "type": "boolean"
+                  },
+                  "error_if_missing": {
+                    "enum": [
+                      "negligencia",
+                      "anamnesis_incompleta",
+                      "razonamiento_clinico"
+                    ]
+                  }
+                }
+              }
+            },
+            "tests": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "recommended",
+                "optional",
+                "unnecessary"
+              ],
+              "properties": {
+                "recommended": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/clave"
+                  }
+                },
+                "optional": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/clave"
+                  }
+                },
+                "unnecessary": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/clave"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset",
+        "item_id",
+        "license",
+        "method"
+      ],
+      "properties": {
+        "dataset": {
+          "enum": [
+            "MedQA",
+            "Synthea",
+            "manual"
+          ]
+        },
+        "item_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "license": {
+          "type": "string",
+          "minLength": 2
+        },
+        "method": {
+          "enum": [
+            "manual",
+            "ia_validador",
+            "synthea"
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "created_by",
+        "created_at",
+        "validator_version",
+        "validated_at",
+        "curated_by",
+        "curated_at",
+        "rejection_reason"
+      ],
+      "properties": {
+        "created_by": {
+          "type": "string",
+          "minLength": 2
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "validator_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "validated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "curated_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "curated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "rejection_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

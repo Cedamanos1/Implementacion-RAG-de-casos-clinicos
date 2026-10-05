@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "CARD-002",
+  "title": "Caso de prueba no curado",
+  "specialty": "emergencias",
+  "language": "es",
+  "status": "validado",
+  "source": {
+    "dataset": "manual",
+    "item_id": "demo-card-001",
+    "license": "uso académico",
+    "method": "manual"
+  },
+  "public": {
+    "patient": {
+      "alias": "Roberto Vargas",
+      "age_years": 58,
+      "sex": "masculino"
+    },
+    "chief_complaint": {
+      "evidence_id": "CARD-002.motivo.dolor_toracico",
+      "category": "motivo",
+      "label": "Motivo de consulta",
+      "text": "Dolor torácico de inicio súbito"
+    },
+    "items": [
+      {
+        "evidence_id": "CARD-002.sintoma.disnea",
+        "category": "sintoma",
+        "label": "Disnea",
+        "text": "Refiere dificultad respiratoria"
+      }
+    ],
+    "allergies_recorded": false
+  },
+  "on_request": [
+    {
+      "evidence_id": "CARD-002.lab.troponina_t",
+      "category": "laboratorio",
+      "label": "Troponina T",
+      "value": 1.8,
+      "unit": "ng/mL",
+      "interpretation": "H",
+      "reveal_policy": {
+        "owner": "laboratorio",
+        "mode": "al_solicitar_examen",
+        "requires": [
+          "troponina_t"
+        ]
+      }
+    },
+    {
+      "evidence_id": "CARD-002.estudio.ecg",
+      "category": "estudio",
+      "label": "ECG",
+      "text": "Elevación del segmento ST en II, III y aVF",
+      "interpretation": "A",
+      "reveal_policy": {
+        "owner": "radiologia",
+        "mode": "al_solicitar_examen",
+        "requires": [
+          "ecg"
+        ]
+      }
+    }
+  ],
+  "protected": {
+    "diagnosis": {
+      "name": "Infarto agudo de miocardio con elevación del ST",
+      "synonyms": [
+        "IAMCEST"
+      ]
+    },
+    "differentials": [
+      {
+        "name": "Pericarditis aguda",
+        "must_not_miss": false,
+        "discard_evidence_ids": [
+          "CARD-002.estudio.ecg"
+        ]
+      }
+    ],
+    "treatment_reference": {
+      "summary": "Manejo inicial de síndrome coronario agudo según protocolo institucional.",
+      "key_actions": [
+        "activar protocolo coronario",
+        "evaluar reperfusión"
+      ]
+    },
+    "contraindications": [],
+    "evaluation": {
+      "key_questions": [
+        {
+          "id": "kq1",
+          "topic": "caracteristicas_dolor",
+          "evidence_ids": [
+            "CARD-002.motivo.dolor_toracico"
+          ],
+          "weight": 5,
+          "critical": true,
+          "error_if_missing": "anamnesis_incompleta"
+        }
+      ],
+      "tests": {
+        "recommended": [
+          "troponina_t",
+          "ecg"
+        ],
+        "optional": [],
+        "unnecessary": []
+      }
+    }
+  },
+  "provenance": {
+    "created_by": "equipo",
+    "created_at": "2026-10-05",
+    "validator_version": "1.0.0",
+    "validated_at": "2026-10-05",
+    "curated_by": "equipo",
+    "curated_at": "2026-10-05",
+    "rejection_reason": null
+  }
+}
