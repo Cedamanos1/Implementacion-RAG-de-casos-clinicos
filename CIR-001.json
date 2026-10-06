@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "CIR-001",
+  "title": "Dolor abdominal en niño",
+  "specialty": "cirugia_general",
+  "language": "es",
+  "status": "borrador",
+  "source": { "dataset": "manual", "item_id": null, "license": "Uso académico del equipo", "method": "manual" },
+
+  "public": {
+    "patient": { "alias": "Mateo S.", "age_years": 10, "sex": "masculino" },
+    "chief_complaint": {
+      "evidence_id": "CIR-001.mot.dolor", "category": "motivo", "label": "Motivo de consulta",
+      "text": "Dolor de barriga desde hace 18 horas."
+    },
+    "items": [
+      { "evidence_id": "CIR-001.ant.previos", "category": "antecedente", "label": "Antecedentes", "text": "Sin enfermedades previas y vacunas al día." },
+      { "evidence_id": "CIR-001.vit.fc", "category": "signo_vital", "label": "Frecuencia cardíaca", "value": 110, "unit": "/min",
+        "code": { "system": "LOINC", "value": "8867-4" } }
+    ],
+    "allergies_recorded": false
+  },
+
+  "on_request": [
+    { "evidence_id": "CIR-001.hx.dolor", "category": "anamnesis", "label": "Inicio del dolor", "text": "Empezó cerca del ombligo y bajó a la derecha. Vomitó dos veces.",
+      "reveal_policy": { "owner": "paciente", "mode": "al_preguntar", "requires": ["inicio_dolor"] } },
+    { "evidence_id": "CIR-001.ex.abdomen", "category": "examen_fisico", "label": "Abdomen", "text": "Dolor en fosa ilíaca derecha con rebote positivo.",
+      "reveal_policy": { "owner": "medico_asistente", "mode": "al_examinar", "requires": ["abdomen"] } },
+    { "evidence_id": "CIR-001.lab.leucocitos", "category": "laboratorio", "label": "Leucocitos", "value": 15.8, "unit": "10*3/uL",
+      "code": { "system": "LOINC", "value": "6690-2" }, "reference_range": "4.5 a 13.5", "interpretation": "H",
+      "reveal_policy": { "owner": "laboratorio", "mode": "al_solicitar_examen", "requires": ["hemograma"] } },
+    { "evidence_id": "CIR-001.img.eco", "category": "imagen", "label": "Ecografía abdominal", "text": "Apéndice no compresible de 8 mm con líquido alrededor.",
+      "reveal_policy": { "owner": "radiologia", "mode": "al_solicitar_examen", "requires": ["ecografia"] } },
+    { "evidence_id": "CIR-001.hx.alergias", "category": "anamnesis", "label": "Alergias", "text": "Es alérgico a la amoxicilina: le salieron ronchas.",
+      "reveal_policy": { "owner": "paciente", "mode": "al_preguntar", "requires": ["alergias"] } }
+  ],
+
+  "protected": {
+    "diagnosis": { "name": "Apendicitis aguda", "synonyms": ["apendicitis"], "code": { "system": "CIE-10", "value": "K35.8" } },
+    "differentials": [
+      { "name": "Torsión testicular", "must_not_miss": true, "discard_evidence_ids": ["CIR-001.ex.abdomen"] }
+    ],
+    "treatment_reference": { "summary": "Apendicectomía con antibióticos y manejo del dolor.", "key_actions": ["Ayuno e hidratación intravenosa"] },
+    "contraindications": [
+      { "id": "ci1", "drug_or_class": "Penicilinas", "reason": "Alergia a la amoxicilina.", "evidence_id": "CIR-001.hx.alergias", "alternative": "Otro antibiótico" }
+    ],
+    "evaluation": {
+      "key_questions": [
+        { "id": "kq1", "topic": "Inicio del dolor", "evidence_ids": ["CIR-001.hx.dolor"], "weight": 3, "critical": false, "error_if_missing": "anamnesis_incompleta" }
+      ],
+      "tests": { "recommended": ["hemograma", "ecografia"], "optional": [], "unnecessary": [] }
+    }
+  },
+
+  "provenance": {
+    "created_by": "Pendiente: confirmar nombre del responsable",
+    "created_at": "2026-10-05",
+    "validator_version": "1.0.0",
+    "validated_at": "2026-10-05",
+    "curated_by": null,
+    "curated_at": null,
+    "rejection_reason": null
+  }
+}
