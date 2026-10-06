@@ -1,0 +1,2 @@
+# CPU embeddings for intfloat/multilingual-e5-small. Vector scoring is local Python.
+sentence-transformers==3.3.1
