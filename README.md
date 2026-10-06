@@ -31,6 +31,10 @@ uvicorn app.main:app --reload
 ```
 Swagger: `http://127.0.0.1:8000/docs`
 
+## RAG de recuperación de evidencia
+Consulta [docs/rag/README.md](docs/rag/README.md) para instalar, construir y
+consultar el índice local de evidencia clínica.
+
 ## Endpoints
 - `GET /health`
 - `GET /api/v1/repository/status`
