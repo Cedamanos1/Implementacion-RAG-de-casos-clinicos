@@ -1,46 +1,33 @@
-# EN-002 · Repositorio y API de Casos Clínicos
+# Pruebas del RAG de casos clínicos
 
-Implementación del habilitador EN-002 del **Paciente Virtual Adaptativo**.
+Sigue estos pasos desde la raíz del repositorio en PowerShell.
 
-## Qué cubre
-- Valida cada JSON con `schemas/caso.schema.json`.
-- Solo carga casos con `status = "curado"`.
-- Lista especialidades disponibles.
-- Selecciona un caso aleatorio por especialidad.
-- Expone al frontend únicamente `public`.
-- Expone un índice de `on_request` sin `text`, `value` ni `unit`.
-- No existe endpoint público para `protected`.
+## 1. Crear y activar el entorno virtual
 
-> La liberación real de datos `on_request` corresponde a EN-004 (Política de Contexto y Recuperación Selectiva).
-
-## Instalación
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
 ```
 
-## Pruebas
+Si PowerShell bloquea la activación del entorno, permite scripts para la sesión
+actual y vuelve a activarlo:
+
 ```powershell
-python -m pytest -q
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\Activate.ps1
 ```
 
-## API
+## 2. Instalar dependencias
+
 ```powershell
-uvicorn app.main:app --reload
+python -m pip install -r requirements.txt -r requirements-rag.txt
 ```
-Swagger: `http://127.0.0.1:8000/docs`
 
-## RAG de recuperación de evidencia
-Consulta [docs/rag/README.md](docs/rag/README.md) para instalar, construir y
-consultar el índice local de evidencia clínica.
+## 3. Ejecutar las pruebas del RAG
 
-## Endpoints
-- `GET /health`
-- `GET /api/v1/repository/status`
-- `POST /api/v1/repository/reload`
-- `GET /api/v1/specialties`
-- `GET /api/v1/cases`
-- `POST /api/v1/cases/select`
-- `GET /api/v1/cases/{case_id}/public`
-- `GET /api/v1/cases/{case_id}/on-request-index`
+```powershell
+python -m pytest -q tests/test_rag.py
+```
+
+Las pruebas usan un codificador determinista de prueba, por lo que no descargan
+los pesos del modelo E5 ni requieren conexión a Hugging Face.
