@@ -31,3 +31,33 @@ python -m pytest -q tests/test_rag.py
 
 Las pruebas usan un codificador determinista de prueba, por lo que no descargan
 los pesos del modelo E5 ni requieren conexión a Hugging Face.
+
+## Integración FastAPI + RAG
+
+La aplicación conserva los endpoints EN-002 y añade:
+
+| Método | Ruta | Finalidad |
+|---|---|---|
+| GET | `/api/v1/rag/health` | Estado del índice RAG |
+| POST | `/api/v1/rag/cases/search` | Recuperar casos candidatos por especialidad + similitud |
+| POST | `/api/v1/rag/evidence/search` | Recuperar evidencia del `case_id` activo |
+| POST | `/api/v1/rag/reload` | Recargar el índice persistido |
+
+### Preparar el entorno RAG
+
+```powershell
+pip install -r requirements.txt
+pip install -r requirements-rag.txt
+python -m rag.build
+uvicorn app.main:app --reload
+```
+
+### Metodología
+
+Ver:
+
+- `docs/METODOLOGIA_INTEGRACION.md`
+- `docs/ARQUITECTURA_INTEGRADA.md`
+
+El RAG no reemplaza la política de acceso. Para una sesión, EN-004 deberá calcular
+`allowed_evidence_ids` y luego invocar `/api/v1/rag/evidence/search`.
