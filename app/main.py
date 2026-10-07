@@ -1,3 +1,4 @@
+from app.rag_router import router as rag_router
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from app.config import API_PREFIX
 from app.dependencies import get_repository
@@ -41,3 +42,6 @@ def public_case(case_id: str, repo: CaseRepository = Depends(get_repository)):
 def on_request_index(case_id: str, repo: CaseRepository = Depends(get_repository)):
     try: return repo.get_on_request_index(case_id)
     except CaseNotFoundError as exc: raise HTTPException(status_code=404, detail="Caso no encontrado o no disponible para estudiantes.") from exc
+
+
+app.include_router(rag_router)
